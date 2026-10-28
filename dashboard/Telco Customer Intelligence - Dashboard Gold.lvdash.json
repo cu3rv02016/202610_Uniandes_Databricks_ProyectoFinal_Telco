@@ -1,0 +1,436 @@
+{
+  "datasets": [
+    {
+      "name": "aec5bc2d",
+      "displayName": "kpi_clientes_ciudad_segmento",
+      "config": {
+        "version": "1.1",
+        "source": "workspace.telco_gold.kpi_clientes_ciudad_segmento",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "1c4b4bb7",
+      "displayName": "kpi_altas_mensuales",
+      "config": {
+        "version": "1.1",
+        "source": "workspace.telco_gold.kpi_altas_mensuales",
+        "dimensions": [
+          {
+            "expr": "source.*"
+          }
+        ],
+        "measures": [
+          {
+            "name": "count",
+            "expr": "COUNT(*)",
+            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
+            "displayName": "Count"
+          }
+        ]
+      }
+    },
+    {
+      "name": "7990bb22",
+      "displayName": "ds_clientes_gold",
+      "queryLines": [
+        "SELECT *\r\n",
+        "FROM workspace.telco_gold.kpi_clientes_ciudad_segmento;"
+      ]
+    },
+    {
+      "name": "227ad39b",
+      "displayName": "ds_porcentaje_activos",
+      "queryLines": [
+        "SELECT\r\n",
+        "    ROUND(\r\n",
+        "        100.0 * SUM(clientes_activos)\r\n",
+        "        / NULLIF(SUM(total_clientes), 0),\r\n",
+        "        1\r\n",
+        "    ) AS porcentaje_activos\r\n",
+        "FROM workspace.telco_gold.kpi_clientes_ciudad_segmento;"
+      ]
+    },
+    {
+      "name": "d5b38ae2",
+      "displayName": "ds_altas_mensuales",
+      "queryLines": [
+        "SELECT\r\n",
+        "    mes_alta,\r\n",
+        "    SUM(total_altas) AS altas_mes\r\n",
+        "FROM workspace.telco_gold.kpi_altas_mensuales\r\n",
+        "GROUP BY mes_alta;"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "a47dad4d",
+      "displayName": "Resumen ejecutivo",
+      "layout": [
+        {
+          "widget": {
+            "name": "total-de-clientes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7990bb22",
+                  "fields": [
+                    {
+                      "name": "sum(total_clientes)",
+                      "expression": "SUM(`total_clientes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": {
+                  "value": "<span style=\"font-family: Orbitron;font-size: 18px;\">Total de clientes</span>",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_clientes)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "d55d6970",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7990bb22",
+                  "fields": [
+                    {
+                      "name": "sum(clientes_activos)",
+                      "expression": "SUM(`clientes_activos`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": {
+                  "value": "<span style=\"font-family: Orbitron;font-size: 18px;\">Clientes activos</span>",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(clientes_activos)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "391e07df",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7990bb22",
+                  "fields": [
+                    {
+                      "name": "sum(clientes_inactivos)",
+                      "expression": "SUM(`clientes_inactivos`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": {
+                  "value": "<span style=\"font-family: Orbitron;font-size: 18px;\">Clientes inactivos</span>",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(clientes_inactivos)"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "31e34ad8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "227ad39b",
+                  "fields": [
+                    {
+                      "name": "sum(porcentaje_activos)",
+                      "expression": "SUM(`porcentaje_activos`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": false,
+                "title": {
+                  "value": "<span style=\"font-family: Orbitron;font-size: 18px;\">Clientes activos (%)</span>",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(porcentaje_activos)",
+                  "formatTemplate": "{{ @formatted }}%"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "clientes-por-ciudad-y-segmento",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "aec5bc2d",
+                  "fields": [
+                    {
+                      "name": "segmento",
+                      "expression": "`segmento`"
+                    },
+                    {
+                      "name": "ciudad",
+                      "expression": "`ciudad`"
+                    },
+                    {
+                      "name": "sum(total_clientes)",
+                      "expression": "SUM(`total_clientes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "<span style=\"font-family: Orbitron;font-size: 18px;\">Clientes por ciudad y segmento</span>",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "ciudad",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_clientes)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "segmento",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Personas",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      },
+                      {
+                        "value": "Empresas",
+                        "color": {
+                          "themeColorType": "fontColor"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "evolucion-mensual-de-nuevos-clientes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "d5b38ae2",
+                  "fields": [
+                    {
+                      "name": "monthly(mes_alta)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes_alta`)"
+                    },
+                    {
+                      "name": "sum(altas_mes)",
+                      "expression": "SUM(`altas_mes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "<span style=\"font-family: Orbitron;font-size: 18px;\">Evolución mensual de nuevos clientes</span>",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(mes_alta)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(altas_mes)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
