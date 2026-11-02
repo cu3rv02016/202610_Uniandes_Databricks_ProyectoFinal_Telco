@@ -167,29 +167,134 @@ La definición del dashboard está versionada en el directorio `dashboard/`.
 
 Para reproducir el procesamiento en Databricks:
 
-1. Configurar un Workspace con Unity Catalog y cómputo Serverless.
-2. Crear los esquemas `telco_bronze`, `telco_silver` y `telco_gold`
-   dentro del catálogo `workspace`.
+1. Configurar un Workspace de Databricks con Unity Catalog
+   y cómputo Serverless.
+
+2. Crear los esquemas `telco_bronze`, `telco_silver`,
+   `telco_gold` y `telco_ml` en el catálogo `workspace`.
+
 3. Ejecutar el notebook de ingesta Bronze.
-4. Configurar el pipeline Lakeflow usando los archivos SQL
-   del directorio `pipelines/`.
-5. Ejecutar el pipeline y verificar las vistas Gold.
-6. Configurar el Job con las tareas Bronze y Lakeflow.
-7. Importar el archivo `.lvdash.json` y configurar su publicación.
+
+4. Configurar el pipeline Lakeflow utilizando los archivos
+   SQL del directorio `pipelines/`.
+
+5. Ejecutar el pipeline y validar las tablas Silver y Gold.
+
+6. Ejecutar las pruebas de calidad de datos del directorio
+   `tests/`.
+
+7. Ejecutar `02_segmentacion_clientes.ipynb` para entrenar
+   K-Means y registrar el modelo en MLflow.
+
+8. Configurar la URI del modelo MLflow y el volumen
+   `workspace.telco_ml.mlflow_tmp`.
+
+9. Ejecutar `03_prediccion_segmentos.ipynb` para generar
+   predicciones y actualizar la tabla Delta.
+
+10. Configurar `job_telco_medallion` con sus cuatro tareas:
+    - ingesta_bronze_clientes
+    - refresh_telco_medallion
+    - validar_calidad_telco
+    - prediccion_segmentos
+
+11. Ejecutar el Job completo y verificar que todas las
+    tareas finalicen con estado Succeeded.
+
+12. Importar el dashboard `.lvdash.json`, configurar
+    el SQL Warehouse y publicar el dashboard.
 
 La publicación, los permisos del dashboard y la configuración del Job
 se administran actualmente en Databricks y no están incluidos
 en el versionamiento del código.
 
-## 10. Próximas mejoras
+## 10. Machine Learning y MLflow
 
-- Pruebas automatizadas de calidad de datos.
-- Configuración de despliegue como código.
+### 10.1. Objetivo
+
+Implementar un modelo de aprendizaje no supervisado para segmentar clientes de telecomunicaciones mediante PySpark MLlib, utilizando K-Means y MLflow para el seguimiento de experimentos.
+
+### 10.2. Preparación y entrenamiento
+
+El notebook `notebooks/02_segmentacion_clientes.ipynb` realiza:
+
+- Lectura de clientes desde `workspace.telco_silver.clientes`.
+- Preparación de variables de ciudad, segmento y antigüedad.
+- Codificación de características categóricas.
+- Construcción y escalado del vector de características.
+- Entrenamiento de modelos K-Means con K entre 2 y 8.
+- Evaluación mediante Silhouette Score.
+- Registro de experimentos y métricas en MLflow.
+
+### 10.3. Resultados
+
+| Métrica | Resultado |
+|---|---|
+| Algoritmo | K-Means |
+| Clientes procesados | 1.000 |
+| Modelos evaluados | 7 |
+| Mejor K | 5 |
+| Silhouette Score | 0.7375 |
+| Clústeres generados | 5 |
+| Clientes por clúster | 200 |
+
+Los clústeres identificados separan principalmente a los clientes según su ciudad y segmento comercial. Se utilizaron datos sintéticos, por lo que los resultados representan una demostración técnica de segmentación y no una predicción de abandono o rentabilidad.
+
+### 10.4. Inferencia con MLflow
+
+El notebook `notebooks/03_prediccion_segmentos.ipynb` recupera el modelo entrenado desde MLflow y ejecuta predicciones sin necesidad de volver a entrenarlo.
+
+Los resultados se almacenan en la tabla Delta:
+
+`workspace.telco_ml.clientes_segmentados`
+
+Se implementó una operación `MERGE` para actualizar los clientes existentes e insertar nuevos registros.
+
+La ejecución fue validada con 1.000 clientes y cinco clústeres. Se comprobó que una segunda ejecución mantuviera el total de registros.
+
+### 10.5. Automatización con Lakeflow Jobs
+
+El Job `job_telco_medallion` integra cuatro tareas:
+
+| Orden | Tarea | Descripción |
+|---|---|---|
+| 1 | ingesta_bronze_clientes | Ingesta de clientes |
+| 2 | refresh_telco_medallion | Transformación Silver y Gold |
+| 3 | validar_calidad_telco | Validaciones de calidad |
+| 4 | prediccion_segmentos | Inferencia K-Means y actualización Delta |
+
+Se verificó una ejecución completa de las cuatro tareas con estado `Succeeded`.
+
+### 10.6. Integración con el dashboard
+
+El dashboard **Telco Customer Intelligence - Dashboard Gold** incorpora la distribución de clientes por clúster y segmento, además de los indicadores de negocio existentes.
+
+Indicadores observados:
+
+- Total de clientes: 1.000.
+- Clientes activos: 924.
+- Clientes inactivos: 76.
+- Porcentaje de clientes activos: 92,4 %.
+- Clústeres K-Means: 5.
+
+### 10.7. Consideraciones de reproducibilidad
+
+La ejecución requiere un entorno Databricks con acceso a Unity Catalog, Spark, Delta Lake y MLflow.
+
+El modelo se recupera mediante la URI de una ejecución específica de MLflow. Para utilizarlo en otro entorno es necesario disponer del artefacto del modelo y configurar las rutas de los recursos correspondientes.
+
+Los datos de Unity Catalog, los artefactos de MLflow y la configuración operativa de los Jobs no se despliegan automáticamente al clonar este repositorio.
+
+## 11. Próximas mejoras
+
+- Configuración de infraestructura y despliegue como código.
+- Parametrización del modelo MLflow y sus dependencias.
 - Ampliación del conjunto de datos.
-- Modelos de Machine Learning y seguimiento mediante MLflow.
 - Automatización CI/CD.
+- Monitoreo de calidad y desempeño del modelo.
+- Implementación de nuevas variables de comportamiento.
 
-## Autor
+## 12. Autor
 
 **Guillermo Armando Rubio**
 
