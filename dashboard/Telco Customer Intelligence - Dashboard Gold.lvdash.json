@@ -73,6 +73,27 @@
         "FROM workspace.telco_gold.kpi_altas_mensuales\r\n",
         "GROUP BY mes_alta;"
       ]
+    },
+    {
+      "name": "8fb6f20b",
+      "displayName": "ds_segmentacion_ml",
+      "queryLines": [
+        "SELECT\r\n",
+        "    cluster,\r\n",
+        "    ciudad,\r\n",
+        "    segmento,\r\n",
+        "    COUNT(*) AS total_clientes,\r\n",
+        "    ROUND(AVG(antiguedad_meses), 2) AS antiguedad_promedio_meses\r\n",
+        "FROM workspace.telco_ml.clientes_segmentados\r\n",
+        "GROUP BY\r\n",
+        "    cluster,\r\n",
+        "    ciudad,\r\n",
+        "    segmento\r\n",
+        "ORDER BY\r\n",
+        "    cluster,\r\n",
+        "    total_clientes DESC,\r\n",
+        "    ciudad;"
+      ]
     }
   ],
   "pages": [
@@ -418,6 +439,77 @@
           "position": {
             "x": 6,
             "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "segmentacion-de-clientes-k-means",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8fb6f20b",
+                  "fields": [
+                    {
+                      "name": "segmento",
+                      "expression": "`segmento`"
+                    },
+                    {
+                      "name": "cluster",
+                      "expression": "`cluster`"
+                    },
+                    {
+                      "name": "sum(total_clientes)",
+                      "expression": "SUM(`total_clientes`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "<span style=\"font-family: Orbitron;font-size: 18px;\">Segmentación de clientes - K-Means</span>",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cluster",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_clientes)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "segmento",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
             "width": 6,
             "height": 6
           }
